@@ -189,7 +189,9 @@ public class SplitRangeView extends View {
                             int amount = computeActualDistance(activeSpan, dxInt);
                             if (amount != 0) {
                                 activeSpan.move(amount);
-                                timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
+                                if (timeLineChangeListener != null) {
+                                    timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth(), activeSpan.end() * 1F / getWidth());
+                                }
                             } else {
                                 hasUpdate = false;
                             }
@@ -207,7 +209,9 @@ public class SplitRangeView extends View {
                                 if (amount != 0) {
                                     activeSpan.translateDragging = true;
                                     activeSpan.move(amount);
-                                    timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
+                                    if (timeLineChangeListener != null) {
+                                        timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth(), activeSpan.end() * 1F / getWidth());
+                                    }
                                 } else {
                                     hasUpdate = false;
                                 }
@@ -246,7 +250,9 @@ public class SplitRangeView extends View {
         } else {
             span.shrinkLeft(Math.min(dx, span.length - minimumSize));
         }
-        timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
+        if (timeLineChangeListener != null) {
+            timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth(), activeSpan.end() * 1F / getWidth());
+        }
     }
 
     private void handleRightMovement(Span span, int dx) {
@@ -258,7 +264,9 @@ public class SplitRangeView extends View {
         } else {
             span.length = Math.max(span.length + dx, minimumSize);
         }
-        timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
+        if (timeLineChangeListener != null) {
+            timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
+        }
     }
 
     private int computeActualDistance(Span target, int dx) {
