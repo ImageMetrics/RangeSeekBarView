@@ -31,6 +31,8 @@ public class SplitRangeView extends View {
     private final boolean moveOnTouch;
     RectF boxRect = new RectF();
     int handleSize;
+    int handleWidth;
+    int handleHeight;
     int thumbPadding;
     float top, bottom;
     float currentX;
@@ -53,6 +55,8 @@ public class SplitRangeView extends View {
 
     private int textPad = 40;
     private int minimumSize = 10;
+
+    private boolean allowOverlap = false;
 
     public void setInfoPadding(int textPad) {
         this.textPad = textPad;
@@ -120,6 +124,16 @@ public class SplitRangeView extends View {
             borderDrawable = AppCompatResources.getDrawable(getContext(), id);
         }
 
+        allowOverlap = typedArray.getBoolean(R.styleable.RangeSeekBarView_allowOverlap, false);
+        handleWidth = (int) typedArray.getDimension(R.styleable.RangeSeekBarView_thumb_width, -999);
+        if (handleWidth == -999) {
+            handleWidth = handleSize;
+        }
+        handleHeight = (int) typedArray.getDimension(R.styleable.RangeSeekBarView_thumb_height, -999);
+        if (handleHeight == -999) {
+            handleHeight = handleSize;
+        }
+
         typedArray.recycle();
 
         spanTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -140,7 +154,7 @@ public class SplitRangeView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY) {
-            int height = handleSize + getPaddingBottom() + getPaddingTop();
+            int height = handleHeight + getPaddingBottom() + getPaddingTop();
             setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), height);
         } else {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -175,6 +189,7 @@ public class SplitRangeView extends View {
                             int amount = computeActualDistance(activeSpan, dxInt);
                             if (amount != 0) {
                                 activeSpan.move(amount);
+                                timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
                             } else {
                                 hasUpdate = false;
                             }
@@ -192,6 +207,7 @@ public class SplitRangeView extends View {
                                 if (amount != 0) {
                                     activeSpan.translateDragging = true;
                                     activeSpan.move(amount);
+                                    timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
                                 } else {
                                     hasUpdate = false;
                                 }
@@ -230,6 +246,7 @@ public class SplitRangeView extends View {
         } else {
             span.shrinkLeft(Math.min(dx, span.length - minimumSize));
         }
+        timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
     }
 
     private void handleRightMovement(Span span, int dx) {
@@ -241,12 +258,17 @@ public class SplitRangeView extends View {
         } else {
             span.length = Math.max(span.length + dx, minimumSize);
         }
+        timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
     }
 
     private int computeActualDistance(Span target, int dx) {
         boolean canMove = dx <= 0 && target.offset + dx > 0 || dx > 0 && target.end() + dx < getWidth();
         if (!canMove) {
             return dx <= 0 ? -target.offset : getWidth() - target.end(); // compensate
+        }
+
+        if (allowOverlap) {
+            return dx;
         }
 
         for (Span child: rangeSpans) {
@@ -277,9 +299,9 @@ public class SplitRangeView extends View {
         int gravityPadding = 0;
         int mask = (leftGravity & Gravity.HORIZONTAL_GRAVITY_MASK);
         if (mask == Gravity.LEFT) {
-            gravityPadding = handleSize;
+            gravityPadding = handleWidth;
         } else if (mask == Gravity.CENTER_HORIZONTAL) {
-            gravityPadding = handleSize / 2;
+            gravityPadding = handleWidth / 2;
         }
 
         return gravityPadding;
@@ -392,6 +414,9 @@ public class SplitRangeView extends View {
     }
 
     private boolean overlap(Span target, Span source) {
+        if (allowOverlap) {
+            return false;
+        }
         return target.offset < source.end() && source.offset < target.end();
     }
 
@@ -413,7 +438,7 @@ public class SplitRangeView extends View {
 
                     String txt = item.info;
                     if (!TextUtils.isEmpty(txt)) {
-                        int leftPad = (leftGravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.RIGHT ? handleSize + thumbPadding : textPad;
+                        int leftPad = (leftGravity & Gravity.HORIZONTAL_GRAVITY_MASK) == Gravity.RIGHT ? handleWidth + thumbPadding : textPad;
                         drawInfo(canvas, item, leftPad, boxRect);
                     }
                 }
@@ -452,7 +477,7 @@ public class SplitRangeView extends View {
 
     private Rect bound(int anchor, int gravity) {
 //        int height = (int) (handleSize * handleDrawable.getIntrinsicHeight() * 1F / handleDrawable.getIntrinsicWidth());
-        int height = handleSize;
+        int height = handleHeight;
         Rect rect = new Rect();
         switch (gravity & Gravity.VERTICAL_GRAVITY_MASK) {
             case Gravity.CENTER_VERTICAL:
@@ -472,17 +497,17 @@ public class SplitRangeView extends View {
 
         switch (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
             case Gravity.CENTER_HORIZONTAL:
-                rect.left = anchor - handleSize / 2;
+                rect.left = anchor - handleWidth / 2;
                 break;
             case Gravity.RIGHT:
                 rect.left = anchor + thumbPadding;
                 break;
             case Gravity.LEFT:
             default:
-                rect.left = anchor - handleSize - thumbPadding;
+                rect.left = anchor - handleWidth - thumbPadding;
                 break;
         }
-        rect.right = rect.left + handleSize;
+        rect.right = rect.left + handleWidth;
 
         return rect;
     }
@@ -505,12 +530,12 @@ public class SplitRangeView extends View {
                     spanToDeselect = item;
                     Log.d(TAG, "UNSelect " + spanToDeselect.hashCode());
                 } else {
-                    if (x < item.offset - gravityPadding + handleSize) {
+                    if (x < item.offset - gravityPadding + handleWidth) {
                         Log.d(TAG, "Left click");
                         if (timeLineChangeListener != null) {
                             timeLineChangeListener.onThumbClicked(item.tag, 0);
                         }
-                    } else if (x > item.end() + gravityPadding - handleSize) {
+                    } else if (x > item.end() + gravityPadding - handleWidth) {
                         Log.d(TAG, "Right click");
                         if (timeLineChangeListener != null) {
                             timeLineChangeListener.onThumbClicked(item.tag, 1);

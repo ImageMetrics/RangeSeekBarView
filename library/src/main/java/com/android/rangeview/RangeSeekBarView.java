@@ -30,6 +30,8 @@ public class RangeSeekBarView extends View {
     PointF arrowPos = new PointF();
     RectF boxRect = new RectF();
     int handleSize;
+    int handleWidth;
+    int handleHeight;
     int thumbPadding;
     boolean showTrace;
     float x1,x2;
@@ -110,13 +112,22 @@ public class RangeSeekBarView extends View {
             negativePaint.setColor(negativeColor);
         }
 
+        handleWidth = (int) typedArray.getDimension(R.styleable.RangeSeekBarView_thumb_width, -999);
+        if (handleWidth == -999) {
+            handleWidth = handleSize;
+        }
+        handleHeight = (int) typedArray.getDimension(R.styleable.RangeSeekBarView_thumb_height, -999);
+        if (handleHeight == -999) {
+            handleHeight = handleSize;
+        }
+
         typedArray.recycle();
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY) {
-            int height = handleSize + getPaddingBottom() + getPaddingTop();
+            int height = handleHeight + getPaddingBottom() + getPaddingTop();
             setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), height);
         } else {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -151,11 +162,11 @@ public class RangeSeekBarView extends View {
                     }
                 } else if (moveHandle.active) {
                     moveScene(dx);
-                } else if (Math.abs(newX - leftHandle.pos) <= handleSize) {
+                } else if (Math.abs(newX - leftHandle.pos) <= handleWidth) {
                     x1 = x1 + dx;
                     leftHandle.pointerId = pointerId;
                     leftHandle.active = true;
-                } else if (Math.abs(newX - rightHandle.pos) <= handleSize) {
+                } else if (Math.abs(newX - rightHandle.pos) <= handleWidth) {
                     x2 = x2 + dx;
                     rightHandle.pointerId = pointerId;
                     rightHandle.active = true;
@@ -296,7 +307,7 @@ public class RangeSeekBarView extends View {
             if (handleDrawable != null) {
                 handleDrawable.setBounds(bound((int) x1, leftGravity));
                 handleDrawable.draw(canvas);
-                leftHandle.pos = handleDrawable.getBounds().left + handleSize / 2;
+                leftHandle.pos = handleDrawable.getBounds().left + handleWidth / 2;
             } else {
                 leftHandle.pos = x1;
             }
@@ -304,7 +315,7 @@ public class RangeSeekBarView extends View {
             if (handleRightDrawable != null) {
                 handleRightDrawable.setBounds(bound((int) x2, rightGravity));
                 handleRightDrawable.draw(canvas);
-                rightHandle.pos = handleRightDrawable.getBounds().left + handleSize / 2;
+                rightHandle.pos = handleRightDrawable.getBounds().left + handleWidth / 2;
             } else {
                 rightHandle.pos = x2;
             }
@@ -315,33 +326,33 @@ public class RangeSeekBarView extends View {
         Rect rect = new Rect();
         switch (gravity & Gravity.VERTICAL_GRAVITY_MASK) {
             case Gravity.CENTER_VERTICAL:
-                rect.top = (getHeight() - handleSize) / 2;
-                rect.bottom = (getHeight() + handleSize) / 2;
+                rect.top = (getHeight() - handleHeight) / 2;
+                rect.bottom = (getHeight() + handleHeight) / 2;
                 break;
             case Gravity.BOTTOM:
-                rect.top = getHeight() - handleSize;
+                rect.top = getHeight() - handleHeight;
                 rect.bottom = getHeight();
                 break;
             case Gravity.TOP:
             default:
                 rect.top = 0;
-                rect.bottom = handleSize;
+                rect.bottom = handleHeight;
                 break;
         }
 
         switch (gravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
             case Gravity.CENTER_HORIZONTAL:
-                rect.left = anchor - handleSize / 2;
+                rect.left = anchor - handleWidth / 2;
                 break;
             case Gravity.RIGHT:
                 rect.left = anchor + thumbPadding;
                 break;
             case Gravity.LEFT:
             default:
-                rect.left = anchor - handleSize - thumbPadding;
+                rect.left = anchor - handleWidth - thumbPadding;
                 break;
         }
-        rect.right = rect.left + handleSize;
+        rect.right = rect.left + handleWidth;
 
         return rect;
     }

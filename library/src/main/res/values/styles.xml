@@ -21,9 +21,12 @@
         </attr>
         <attr name="background" format="reference"/>
         <attr name="thumb_size" format="dimension"/>
+        <attr name="thumb_width" format="dimension"/>
+        <attr name="thumb_height" format="dimension"/>
         <attr name="thumb_padding" format="dimension"/>
         <attr name="show_trace" format="boolean"/>
         <attr name="move_on_touch" format="boolean"/>
         <attr name="selectionTint" format="color"/>
+        <attr name="allowOverlap" format="boolean"/>
     </declare-styleable>
 </resources>

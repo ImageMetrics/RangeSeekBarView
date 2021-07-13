@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-apply from: 'upload.gradle'
+//apply from: 'upload.gradle'
 
 android {
     compileSdkVersion 29
@@ -36,4 +36,27 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+}
+
+apply plugin: 'maven-publish'
+publishing{
+  repositories {
+        maven {
+          url "https://nexus.apps.image-metrics.net/repository/maven-releases/"
+          credentials {
+            username System.getenv("IM_NEXUS_USERNAME")
+            password System.getenv("IM_NEXUS_PASSWORD")
+          }
+        }
+    }
+    publications {  
+        mavenAar(MavenPublication) {
+            groupId 'com.android.rangeview'
+            artifactId 'rangeview'
+            version '0.0.4-0-1'
+
+            // from components.java
+            artifact "${project.buildDir}/outputs/aar/${project.name}-release.aar"
+        }
+    }
 }
