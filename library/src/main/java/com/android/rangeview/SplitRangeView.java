@@ -57,6 +57,7 @@ public class SplitRangeView extends View {
     private int minimumSize = 10;
 
     private boolean allowOverlap = false;
+    private boolean keepSpanSelection = false;
 
     public void setInfoPadding(int textPad) {
         this.textPad = textPad;
@@ -124,7 +125,7 @@ public class SplitRangeView extends View {
             borderDrawable = AppCompatResources.getDrawable(getContext(), id);
         }
 
-        allowOverlap = typedArray.getBoolean(R.styleable.RangeSeekBarView_allowOverlap, false);
+        allowOverlap = typedArray.getBoolean(R.styleable.RangeSeekBarView_allow_overlap, false);
         handleWidth = (int) typedArray.getDimension(R.styleable.RangeSeekBarView_thumb_width, -999);
         if (handleWidth == -999) {
             handleWidth = handleSize;
@@ -133,6 +134,7 @@ public class SplitRangeView extends View {
         if (handleHeight == -999) {
             handleHeight = handleSize;
         }
+        keepSpanSelection = typedArray.getBoolean(R.styleable.RangeSeekBarView_keep_span_selection, false);
 
         typedArray.recycle();
 
@@ -530,10 +532,10 @@ public class SplitRangeView extends View {
         Span spanToDeselect = null;
         int gravityPadding = extraBasedOnThumbGravity();
 
-        for (Span item: rangeSpans) {
-
+        for (int i = rangeSpans.size() - 1; i >= 0; --i) {
+            Span item = rangeSpans.get(i);
             if (item.handlesShowing) {
-                if (x < item.offset - gravityPadding || x > item.end() + gravityPadding) { // is out ?
+                if (x < item.offset - gravityPadding || x > item.end() + gravityPadding || spanToSelect != null) { // is out ?
                     item.handlesShowing = false;
                     spanToDeselect = item;
                     Log.d(TAG, "UNSelect " + spanToDeselect.hashCode());
@@ -556,10 +558,19 @@ public class SplitRangeView extends View {
                     break;
                 }
             } else if (item.offset < x && x < item.end()) {
-                item.handlesShowing = true;
-                spanToSelect = item;
-                Log.d("Splity", "Select " + spanToSelect.hashCode());
+                if (spanToSelect == null) {
+                    // Only select the topmost span
+                    item.handlesShowing = true;
+                    spanToSelect = item;
+                    Log.d("Splity", "Select " + spanToSelect.hashCode());
+                }
             }
+        }
+
+        if (keepSpanSelection && spanToSelect == null && spanToDeselect != null) {
+            // Keep previous span selected
+            spanToDeselect.handlesShowing = true;
+            spanToDeselect = null;
         }
 
         if (spanToSelect != null) {

@@ -27,6 +27,7 @@
         <attr name="show_trace" format="boolean"/>
         <attr name="move_on_touch" format="boolean"/>
         <attr name="selectionTint" format="color"/>
-        <attr name="allowOverlap" format="boolean"/>
+        <attr name="allow_overlap" format="boolean"/>
+        <attr name="keep_span_selection" format="boolean"/>
     </declare-styleable>
 </resources>
