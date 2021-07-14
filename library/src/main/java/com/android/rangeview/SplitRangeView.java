@@ -414,7 +414,7 @@ public class SplitRangeView extends View {
         }
     }
 
-    private Span findSpanByTag(Object tag) {
+    public Span findSpanByTag(Object tag) {
         for (Span span: rangeSpans) {
             if (span.tag == tag) {
                 return span;
@@ -620,6 +620,9 @@ public class SplitRangeView extends View {
             return handlesShowing;
         }
 
+        public int start() {
+            return offset;
+        }
         public int end() {
             return offset + length;
         }
