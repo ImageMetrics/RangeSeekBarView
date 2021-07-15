@@ -171,6 +171,9 @@ public class SplitRangeView extends View {
             case MotionEvent.ACTION_DOWN:
                 currentX = ev.getX();
                 activeSpan = findActiveSpanUnder(currentX);
+                if (activeSpan != null && timeLineChangeListener != null) {
+                    timeLineChangeListener.onRangeTouch(activeSpan.tag, true);
+                }
                 return true;
             case MotionEvent.ACTION_MOVE:
                 float newX = ev.getX(0);
@@ -231,6 +234,7 @@ public class SplitRangeView extends View {
             case MotionEvent.ACTION_CANCEL:
                 if (activeSpan != null && timeLineChangeListener != null) {
                     timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
+                    timeLineChangeListener.onRangeTouch(activeSpan.tag, false);
                 }
                 if (activeSpan != null) {
                     activeSpan.leftDragging = activeSpan.rightDragging = activeSpan.translateDragging = false;
@@ -593,6 +597,7 @@ public class SplitRangeView extends View {
         void onRangeChanged(Object tag, float startFraction, float endFraction);
         void onSelectionChange(Object tag, boolean selected);
         void onThumbClicked(Object tag, int thumbId);
+        void onRangeTouch(Object tag, boolean begin);
     }
 
     public static class Span {
