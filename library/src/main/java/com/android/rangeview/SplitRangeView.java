@@ -172,7 +172,14 @@ public class SplitRangeView extends View {
                 currentX = ev.getX();
                 activeSpan = findActiveSpanUnder(currentX);
                 if (activeSpan != null && timeLineChangeListener != null) {
-                    timeLineChangeListener.onRangeTouch(activeSpan.tag, true);
+                    int gravityPadding = extraBasedOnThumbGravity();
+                    ClickArea area = ClickArea.CENTER;
+                    if (currentX < activeSpan.offset - gravityPadding + handleWidth) {
+                        area = ClickArea.LEFT;
+                    } else if (currentX > activeSpan.end() + gravityPadding - handleWidth) {
+                        area = ClickArea.RIGHT;
+                    }
+                    timeLineChangeListener.onRangeTouch(activeSpan.tag, true, area);
                 }
                 return true;
             case MotionEvent.ACTION_MOVE:
@@ -194,9 +201,7 @@ public class SplitRangeView extends View {
                             int amount = computeActualDistance(activeSpan, dxInt);
                             if (amount != 0) {
                                 activeSpan.move(amount);
-                                if (timeLineChangeListener != null) {
-                                    timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth(), activeSpan.end() * 1F / getWidth());
-                                }
+                                notifyRangeChanged(ClickArea.CENTER);
                             } else {
                                 hasUpdate = false;
                             }
@@ -214,9 +219,7 @@ public class SplitRangeView extends View {
                                 if (amount != 0) {
                                     activeSpan.translateDragging = true;
                                     activeSpan.move(amount);
-                                    if (timeLineChangeListener != null) {
-                                        timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth(), activeSpan.end() * 1F / getWidth());
-                                    }
+                                    notifyRangeChanged(ClickArea.CENTER);
                                 } else {
                                     hasUpdate = false;
                                 }
@@ -233,8 +236,14 @@ public class SplitRangeView extends View {
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
                 if (activeSpan != null && timeLineChangeListener != null) {
-                    timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
-                    timeLineChangeListener.onRangeTouch(activeSpan.tag, false);
+                    int gravityPadding = extraBasedOnThumbGravity();
+                    ClickArea area = ClickArea.CENTER;
+                    if (currentX < activeSpan.offset - gravityPadding + handleWidth) {
+                        area = ClickArea.LEFT;
+                    } else if (currentX > activeSpan.end() + gravityPadding - handleWidth) {
+                        area = ClickArea.RIGHT;
+                    }
+                    timeLineChangeListener.onRangeTouch(activeSpan.tag, false, area);
                 }
                 if (activeSpan != null) {
                     activeSpan.leftDragging = activeSpan.rightDragging = activeSpan.translateDragging = false;
@@ -256,9 +265,7 @@ public class SplitRangeView extends View {
         } else {
             span.shrinkLeft(Math.min(dx, span.length - minimumSize));
         }
-        if (timeLineChangeListener != null) {
-            timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth(), activeSpan.end() * 1F / getWidth());
-        }
+        notifyRangeChanged(ClickArea.LEFT);
     }
 
     private void handleRightMovement(Span span, int dx) {
@@ -270,9 +277,7 @@ public class SplitRangeView extends View {
         } else {
             span.length = Math.max(span.length + dx, minimumSize);
         }
-        if (timeLineChangeListener != null) {
-            timeLineChangeListener.onRangeChanged(activeSpan.tag, activeSpan.offset * 1F / getWidth() , activeSpan.end() * 1F / getWidth());
-        }
+        notifyRangeChanged(ClickArea.RIGHT);
     }
 
     private int computeActualDistance(Span target, int dx) {
@@ -547,12 +552,12 @@ public class SplitRangeView extends View {
                     if (x < item.offset - gravityPadding + handleWidth) {
                         Log.d(TAG, "Left click");
                         if (timeLineChangeListener != null) {
-                            timeLineChangeListener.onThumbClicked(item.tag, 0);
+                            timeLineChangeListener.onThumbClicked(item.tag, ClickArea.LEFT);
                         }
                     } else if (x > item.end() + gravityPadding - handleWidth) {
                         Log.d(TAG, "Right click");
                         if (timeLineChangeListener != null) {
-                            timeLineChangeListener.onThumbClicked(item.tag, 1);
+                            timeLineChangeListener.onThumbClicked(item.tag, ClickArea.RIGHT);
                         }
                     }
                     if (spanToSelect != null) {
@@ -593,11 +598,19 @@ public class SplitRangeView extends View {
         }
     }
 
+    private void notifyRangeChanged(ClickArea area)
+    {
+        if(timeLineChangeListener != null)
+        {
+            timeLineChangeListener.onRangeChanged(activeSpan.tag,activeSpan.offset * 1F / getWidth(), activeSpan.end() * 1F / getWidth(), area);
+        }
+    }
+
     public interface TimeLineChangeListener {
-        void onRangeChanged(Object tag, float startFraction, float endFraction);
+        void onRangeChanged(Object tag, float startFraction, float endFraction, ClickArea area);
         void onSelectionChange(Object tag, boolean selected);
-        void onThumbClicked(Object tag, int thumbId);
-        void onRangeTouch(Object tag, boolean begin);
+        void onThumbClicked(Object tag, ClickArea area);
+        void onRangeTouch(Object tag, boolean begin, ClickArea area);
     }
 
     public static class Span {
@@ -641,5 +654,11 @@ public class SplitRangeView extends View {
         public void move(int dx) {
             offset += dx;
         }
+    }
+
+    public enum ClickArea {
+        LEFT,
+        RIGHT,
+        CENTER;
     }
 }
