@@ -53,7 +53,7 @@ publishing{
         mavenAar(MavenPublication) {
             groupId 'com.android.rangeview'
             artifactId 'rangeview'
-            version '0.0.4-0-2'
+            version '0.0.4-0-3'
 
             // from components.java
             artifact "${project.buildDir}/outputs/aar/${project.name}-release.aar"

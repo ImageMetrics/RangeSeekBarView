@@ -27,8 +27,8 @@ import java.util.List;
 public class SplitRangeView extends View {
     private static final String TAG = SplitRangeView.class.getSimpleName();
 
-    private final int prefferedTextHeight;
-    private final boolean moveOnTouch;
+    private final int preferredTextHeight;
+    private boolean moveOnTouch;
     RectF boxRect = new RectF();
     int handleSize;
     int handleWidth;
@@ -46,7 +46,7 @@ public class SplitRangeView extends View {
     private final int leftGravity;
     private int rightGravity;
 
-    private List<Span> rangeSpans = new ArrayList<>();
+    protected List<Span> rangeSpans = new ArrayList<>();
     private Span activeSpan;
     private Paint spanTextPaint;
 
@@ -142,7 +142,7 @@ public class SplitRangeView extends View {
         spanTextPaint.setTextSize(dpToPx(getContext(), 12));
         spanTextPaint.setColor(Color.WHITE);
         spanTextPaint.getTextBounds("A", 0, 1, tempRect);
-        prefferedTextHeight = tempRect.height();
+        preferredTextHeight = tempRect.height();
     }
 
     public void setTextColor(int color) {
@@ -151,6 +151,10 @@ public class SplitRangeView extends View {
 
     public void setTextSize(float size) {
         spanTextPaint.setTextSize(size);
+    }
+
+    public void setMoveOnTouch(boolean enable) {
+        moveOnTouch = enable;
     }
 
     @Override
@@ -423,7 +427,7 @@ public class SplitRangeView extends View {
         }
     }
 
-    public Span findSpanByTag(Object tag) {
+    protected Span findSpanByTag(Object tag) {
         for (Span span: rangeSpans) {
             if (span.tag == tag) {
                 return span;
@@ -490,7 +494,7 @@ public class SplitRangeView extends View {
             int newEnd = (int) (txt.length() * (boxRect.width() - 2*textPad) / tempRect.width());
             txt = newEnd <= 0 ? "" : newEnd < txt.length() ? txt.substring(0, newEnd) : txt;
         }
-        canvas.drawText(txt, boxRect.left + leftPadding, boxRect.bottom - (boxRect.height() - prefferedTextHeight) / 2,
+        canvas.drawText(txt, boxRect.left + leftPadding, boxRect.bottom - (boxRect.height() - preferredTextHeight) / 2,
                 spanTextPaint);
     }
 
